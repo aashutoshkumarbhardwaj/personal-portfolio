@@ -3,20 +3,20 @@ import datoCMSClient from './datoCMSClient';
 import { ProfileBanner } from '../types';
 
 const GET_PROFILE_BANNER = `
- {
-  profilebanner {
+{
+  profileBanner {
+    headline
     backgroundImage {
       url
     }
-    headline
-    resumeLink {
-      url
-    }
+    resumeLink 
     linkedinLink
     profileSummary
   }
 }
 `;
+
+ 
 
 export async function getProfileBanner(): Promise<ProfileBanner> {
   const data = await datoCMSClient.request<{ profilebanner: ProfileBanner }>(GET_PROFILE_BANNER);

@@ -8,7 +8,9 @@ const GET_SKILLS = `
     name
     category
     description
-    icon
+    icon{
+    url 
+    }
   }
 }
 `;
