@@ -9,4 +9,6 @@ const datoCMSClient = new GraphQLClient(DATO_CMS_ENDPOINT, {
     Authorization: `Bearer ${DATO_CMS_API_TOKEN}`,
   },
 });
+
+// ✅ Default export (this is what fixes your error)
 export default datoCMSClient;
