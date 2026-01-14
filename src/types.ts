@@ -58,3 +58,13 @@ export interface Skill {
   description: string;
   icon: string;
 }
+
+export interface Reel {
+  id: string;
+  title: string;
+  caption?: string;
+  coverTimestamp?: number;
+  reel: {
+    playbackId: string;
+  };
+}

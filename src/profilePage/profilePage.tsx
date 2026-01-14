@@ -5,6 +5,7 @@ import './ProfilePage.css';
 import ProfileBanner from './ProfileBanner';
 import TopPicksRow from './TopPicksRow';
 import ContinueWatching from './ContinueWatching';
+import { Link } from 'react-router-dom';
 type ProfileType = 'recruiter' | 'developer' | 'stalker' | 'adventure';
 
 const ProfilePage: React.FC = () => {
@@ -26,6 +27,15 @@ const ProfilePage: React.FC = () => {
       </div>
       <TopPicksRow profile={profile} />
       <ContinueWatching profile={profile} />
+
+      {/* For Adventure profile, provide a button/link to view reels (opens the reels page) */}
+      {profile === 'adventure' && (
+        <div style={{ padding: '20px 16px' }}>
+          <Link to="/reels" className="view-reels-button">
+            View Reels
+          </Link>
+        </div>
+      )}
     </>
   );
 };
