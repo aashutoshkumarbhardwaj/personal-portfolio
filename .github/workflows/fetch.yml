@@ -2,7 +2,11 @@ name: Fetch Social Content
 
 on:
   schedule:
+<<<<<<< HEAD
     - cron: "0 4 * * *" # once per day
+=======
+    - cron: "0 3 * * *" # once per day (UTC)
+>>>>>>> eccd2b8 (reel added)
   workflow_dispatch:
 
 jobs:
@@ -10,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+<<<<<<< HEAD
 
       - uses: actions/setup-node@v4
         with:
@@ -17,6 +22,12 @@ jobs:
 
       - run: npm install
 
+=======
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - run: npm install
+>>>>>>> eccd2b8 (reel added)
       - run: node scripts/fetch-content.js
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

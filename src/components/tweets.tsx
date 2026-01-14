@@ -76,7 +76,7 @@ const Feed: React.FC = () => {
         ) : (
           posts.map((post, idx) => {
             // Defensive defaults in case Supabase returns null/undefined fields
-            const author = typeof post?.author === 'string' && post.author.trim() !== '' ? post.author : 'Unknown';
+            const author = typeof post?.author === 'string' && post.author.trim() !== '' ? post.author : 'Aashutosh';
             const avatar = post?.avatar ?? null;
             const platform = typeof post?.platform === 'string' ? post.platform : 'Unknown';
             const content = post?.content ?? '';
