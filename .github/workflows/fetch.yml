@@ -1,14 +1,23 @@
-name: Fetch Content
+name: Fetch Social Content
+
 on:
   schedule:
-    - cron: "*/60 * * * *"
+    - cron: "0 4 * * *" # once per day
+  workflow_dispatch:
+
 jobs:
-  run:
+  fetch:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - run: npm install
-      - run: node fetch-all.js
+
+      - run: node scripts/fetch-all.js
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
