@@ -15,11 +15,14 @@ import Reading from './pages/Reading';
 import Blogs from './pages/Blogs';
 import Certifications from './pages/Certifications';
 import Reels from './pages/reel';
+import Feed from './pages/tweets';
+
 
 const App: React.FC = () => {
   return (
     <Routes>
-      <Route path="/" element={<NetflixTitle />} />
+        <Route path="/" element={<NetflixTitle />} />
+
       <Route path="/browse" element={<Browse />} />
       <Route path="/profile/:profileName" element={<Layout><ProfilePage /></Layout>} />
       <Route path="/work-permit" element={<Layout><WorkPermit /></Layout>} />
@@ -32,9 +35,9 @@ const App: React.FC = () => {
       <Route path="/reading" element={<Layout><Reading /></Layout>} />
       <Route path="/blogs" element={<Layout><Blogs /></Layout>} />
       <Route path="/certifications" element={<Layout><Certifications /></Layout>} />
-      <Route path="/reels" element={<Layout><Reels /></Layout>} />
-    </Routes>
-  );
+      <Route path="/reels" element={<Reels />} />
+      <Route path="/feed" element={<Feed />} />
+    </Routes>);
 };
 
 export default App;

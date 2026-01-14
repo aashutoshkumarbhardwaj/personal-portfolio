@@ -1,0 +1,49 @@
+.post-card {
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  padding: 15px;
+  border: 1px solid #333;
+}
+
+.post-card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.post-card-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.post-card-author {
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.post-card-platform {
+  font-size: 0.8rem;
+  color: #888;
+  margin-left: auto;
+}
+
+.post-card-content p {
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Platform-specific styles */
+.post-card.reddit {
+  border-left: 5px solid #ff4500; /* Reddit orange */
+}
+
+.post-card.telegram {
+  border-left: 5px solid #24a1de; /* Telegram blue */
+}
+
+.post-card.threads {
+  border-left: 5px solid #000000; /* Threads black */
+}

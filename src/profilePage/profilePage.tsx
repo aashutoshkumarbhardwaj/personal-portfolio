@@ -1,19 +1,19 @@
 import React from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation, useParams, Link } from 'react-router-dom';
 import './ProfilePage.css';
 
 import ProfileBanner from './ProfileBanner';
 import TopPicksRow from './TopPicksRow';
 import ContinueWatching from './ContinueWatching';
-import { Link } from 'react-router-dom';
-type ProfileType = 'recruiter' | 'developer' | 'stalker' | 'adventure';
+
+type ProfileType = 'recruiter' | 'developer' | 'reel' | 'adventure';
 
 const ProfilePage: React.FC = () => {
   const location = useLocation();
   const backgroundGif = location.state?.backgroundGif || "https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif"; // Default GIF
   const { profileName } = useParams<{ profileName: string }>();
 
-  const profile = ['recruiter', 'developer', 'stalker', 'adventure'].includes(profileName!)
+  const profile = profileName && ['recruiter', 'developer', 'reel', 'adventure'].includes(profileName)
     ? (profileName as ProfileType)
     : 'recruiter';
   return (

@@ -1,10 +1,11 @@
 // pages/reel.tsx
 import React, { useEffect, useState } from 'react';
-import Navbar from '../components/NavBar';
+// This script lives outside of `src/` so imports must point into `src/` explicitly.
+import Navbar from '../src/components/NavBar';
 import MuxPlayer from "@mux/mux-player-react";
-import { getReels } from '../queries/getreels';
-import { Reel } from '../types';
-import './reel.css';
+import { getReels } from '../src/queries/getreels';
+import { Reel } from '../src/types';
+import '../src/pages/reel.css';
 
 const ReelsPage: React.FC = () => {
   const [reels, setReels] = useState<Reel[]>([]);
