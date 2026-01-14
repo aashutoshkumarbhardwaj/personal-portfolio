@@ -17,7 +17,7 @@ jobs:
 
       - run: npm install
 
-      - run: node scripts/fetch-all.js
+      - run: node scripts/fetch-content.js
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
