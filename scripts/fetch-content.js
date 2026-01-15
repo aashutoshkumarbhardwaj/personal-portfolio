@@ -51,40 +51,6 @@ async function fetchThreads() {
   }
 }
 
-/* =======================
-   REDDIT (RELIABLE)
-======================= */
-async function fetchReddit() {
-  const res = await fetch(
-    "https://www.reddit.com/user/iinaayate.json?limit=10",
-    {
-      headers: {
-        "User-Agent": "portfolio-fetcher/1.0 by u/iinaayate"
-      }
-    }
-  );
-
-  if (!res.ok) {
-    throw new Error(`Reddit HTTP ${res.status}`);
-  }
-
-  const json = await res.json();
-
-  if (!json?.data?.children?.length) {
-    throw new Error("Reddit returned 0 posts");
-  }
-
-  return json.data.children.map(p => ({
-    platform: "reddit",
-    content: p.data.title,
-    post_url: "https://reddit.com" + p.data.permalink,
-    created_at: new Date(p.data.created_utc * 1000).toISOString(),
-    media_urls: [],
-    likes: p.data.ups || 0,
-    comments: p.data.num_comments || 0,
-    shares: 0
-  }));
-}
 
 /* =======================
    TELEGRAM (PUBLIC RSS ONLY)
@@ -150,19 +116,10 @@ async function savePosts(posts) {
 async function run() {
   console.log("Starting fetch job");
 
-  const redditPosts = await fetchReddit(); // MUST succeed
-
   const results = await Promise.allSettled([
     fetchThreads(),
     fetchTelegram()
   ]);
-
-  const posts = [
-    ...redditPosts,
-    ...results
-      .filter(r => r.status === "fulfilled")
-      .flatMap(r => r.value)
-  ];
 
   console.log(
     "Fetched breakdown:",
@@ -171,8 +128,13 @@ async function run() {
     )
   );
 
+  const posts = results
+    .filter(r => r.status === "fulfilled")
+    .flatMap(r => r.value);
+
   if (posts.length === 0) {
-    throw new Error("Fetched 0 posts — stopping pipeline");
+    console.warn("No posts fetched from any source — skipping insert");
+    return;
   }
 
   console.log("Payload sample:", posts[0]);
@@ -182,8 +144,3 @@ async function run() {
 
   console.log("Job finished successfully");
 }
-
-run().catch(err => {
-  console.error("JOB FAILED:", err.message);
-  process.exit(1);
-});
