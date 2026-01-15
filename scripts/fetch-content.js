@@ -1,4 +1,3 @@
-import fetch from "node-fetch";
 import Parser from "rss-parser";
 import { createClient } from "@supabase/supabase-js";
 
@@ -18,7 +17,7 @@ const supabase = createClient(
 );
 
 /* =======================
-   THREADS (BEST EFFORT)
+   THREADS (BEST EFFORT – MAY BE EMPTY IN CI)
 ======================= */
 async function fetchThreads() {
   try {
@@ -34,16 +33,18 @@ async function fetchThreads() {
 
     const items = JSON.parse(match[1]);
 
-    return items.map(item => ({
-      platform: "threads",
-      content: item?.post?.caption?.text || "",
-      post_url: `https://www.threads.net/@aashutoshpandeyy/post/${item?.post?.code}`,
-      created_at: new Date(item?.post?.taken_at * 1000),
-      media_urls: [],
-      likes: 0,
-      comments: 0,
-      shares: 0
-    })).filter(p => p.content && p.post_url);
+    return items
+      .map(item => ({
+        platform: "threads",
+        content: item?.post?.caption?.text || "",
+        post_url: `https://www.threads.net/@aashutoshpandeyy/post/${item?.post?.code}`,
+        created_at: new Date(item?.post?.taken_at * 1000).toISOString(),
+        media_urls: [],
+        likes: 0,
+        comments: 0,
+        shares: 0
+      }))
+      .filter(p => p.content && p.post_url);
   } catch (e) {
     console.warn("Threads skipped:", e.message);
     return [];
@@ -51,62 +52,66 @@ async function fetchThreads() {
 }
 
 /* =======================
-   REDDIT (STABLE)
+   REDDIT (RELIABLE)
 ======================= */
 async function fetchReddit() {
-  try {
-    const res = await fetch(
-      "https://www.reddit.com/user/iinaayate.json",
-      {
-        headers: {
-          "User-Agent": "personal-portfolio-fetcher by u/iinaayate"
-        }
+  const res = await fetch(
+    "https://www.reddit.com/user/iinaayate.json?limit=10",
+    {
+      headers: {
+        "User-Agent": "portfolio-fetcher/1.0 by u/iinaayate"
       }
-    );
+    }
+  );
 
-    if (!res.ok) return [];
-
-    const json = await res.json();
-
-    return json.data.children.map(p => ({
-      platform: "reddit",
-      content: p.data.title,
-      post_url: "https://reddit.com" + p.data.permalink,
-      created_at: new Date(p.data.created_utc * 1000),
-      media_urls: [],
-      likes: p.data.ups || 0,
-      comments: p.data.num_comments || 0,
-      shares: 0
-    }));
-  } catch (e) {
-    console.error("Reddit failed:", e.message);
-    return [];
+  if (!res.ok) {
+    throw new Error(`Reddit HTTP ${res.status}`);
   }
+
+  const json = await res.json();
+
+  if (!json?.data?.children?.length) {
+    throw new Error("Reddit returned 0 posts");
+  }
+
+  return json.data.children.map(p => ({
+    platform: "reddit",
+    content: p.data.title,
+    post_url: "https://reddit.com" + p.data.permalink,
+    created_at: new Date(p.data.created_utc * 1000).toISOString(),
+    media_urls: [],
+    likes: p.data.ups || 0,
+    comments: p.data.num_comments || 0,
+    shares: 0
+  }));
 }
 
 /* =======================
-   TELEGRAM (RSS)
+   TELEGRAM (PUBLIC RSS ONLY)
 ======================= */
 const parser = new Parser();
 
 async function fetchTelegram() {
   try {
+    // MUST be public channel
     const feed = await parser.parseURL(
-      "https://t.me/+g98jinaZsVk3ODll"
+      "https://t.me/twitterering"
     );
 
-    return feed.items.map(item => ({
-      platform: "telegram",
-      content: item.contentSnippet || item.title || "",
-      post_url: item.link,
-      created_at: item.pubDate
-        ? new Date(item.pubDate)
-        : new Date(),
-      media_urls: [],
-      likes: 0,
-      comments: 0,
-      shares: 0
-    })).filter(p => p.content && p.post_url);
+    return feed.items
+      .map(item => ({
+        platform: "telegram",
+        content: item.contentSnippet || item.title || "",
+        post_url: item.link,
+        created_at: item.pubDate
+          ? new Date(item.pubDate).toISOString()
+          : new Date().toISOString(),
+        media_urls: [],
+        likes: 0,
+        comments: 0,
+        shares: 0
+      }))
+      .filter(p => p.content && p.post_url);
   } catch (e) {
     console.warn("Telegram skipped:", e.message);
     return [];
@@ -114,43 +119,63 @@ async function fetchTelegram() {
 }
 
 /* =======================
-   SAVE TO SUPABASE
+   SAVE TO SUPABASE (HARD FAIL ON ZERO INSERT)
 ======================= */
 async function savePosts(posts) {
   if (!posts.length) {
-    console.log("No posts to save");
-    return;
+    throw new Error("savePosts called with empty array");
   }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("posts")
     .upsert(posts, {
-      onConflict: "platform,post_url"
+      onConflict: "platform,post_url",
+      returning: "representation"
     });
 
   if (error) {
     throw new Error("Supabase insert failed: " + error.message);
   }
 
-  console.log(`Saved ${posts.length} posts`);
+  if (!data || data.length === 0) {
+    throw new Error("Upsert ran but inserted ZERO rows");
+  }
+
+  console.log(`Inserted/updated ${data.length} rows`);
 }
 
 /* =======================
-   RUN JOB (CI SAFE)
+   RUN JOB (FAIL-FAST, CI-SAFE)
 ======================= */
 async function run() {
   console.log("Starting fetch job");
 
+  const redditPosts = await fetchReddit(); // MUST succeed
+
   const results = await Promise.allSettled([
     fetchThreads(),
-    fetchReddit(),
     fetchTelegram()
   ]);
 
-  const posts = results
-    .filter(r => r.status === "fulfilled")
-    .flatMap(r => r.value);
+  const posts = [
+    ...redditPosts,
+    ...results
+      .filter(r => r.status === "fulfilled")
+      .flatMap(r => r.value)
+  ];
 
+  console.log(
+    "Fetched breakdown:",
+    results.map(r =>
+      r.status === "fulfilled" ? r.value.length : "failed"
+    )
+  );
+
+  if (posts.length === 0) {
+    throw new Error("Fetched 0 posts — stopping pipeline");
+  }
+
+  console.log("Payload sample:", posts[0]);
   console.log("Total fetched:", posts.length);
 
   await savePosts(posts);
@@ -158,4 +183,7 @@ async function run() {
   console.log("Job finished successfully");
 }
 
-run();
+run().catch(err => {
+  console.error("JOB FAILED:", err.message);
+  process.exit(1);
+});
